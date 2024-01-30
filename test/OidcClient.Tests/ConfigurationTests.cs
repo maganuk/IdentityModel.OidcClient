@@ -53,7 +53,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().NotThrow();
+            act.Should().NotThrowAsync();
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Issuer name is missing in provider information"));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Issuer name is missing in provider information"));
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Authorize endpoint is missing in provider information"));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Authorize endpoint is missing in provider information"));
         }
 
         [Fact]
@@ -116,7 +116,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Token endpoint is missing in provider information"));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Token endpoint is missing in provider information"));
         }
 
         [Fact]
@@ -137,7 +137,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Key set is missing in provider information"));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Key set is missing in provider information"));
         }
 
         [Fact]
@@ -154,7 +154,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Error loading discovery document: Error connecting to https://authority/.well-known/openid-configuration. error."));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Error loading discovery document: Error connecting to https://authority/.well-known/openid-configuration. error."));
         }
 
         [Fact]
@@ -171,7 +171,7 @@ namespace IdentityModel.OidcClient.Tests
 
             Func<Task> act = async () => { await client.EnsureProviderInformationAsync(CancellationToken.None); };
 
-            act.Should().Throw<InvalidOperationException>().Where(e => e.Message.Equals("Error loading discovery document: Error connecting to https://authority/.well-known/openid-configuration: not found"));
+            act.Should().ThrowAsync<InvalidOperationException>().Where(e => e.Message.Equals("Error loading discovery document: Error connecting to https://authority/.well-known/openid-configuration: not found"));
         }
     }
 }

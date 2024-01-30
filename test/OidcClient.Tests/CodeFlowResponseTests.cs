@@ -335,7 +335,7 @@ namespace IdentityModel.OidcClient.Tests
                 new NetworkHandler(JsonSerializer.Serialize(tokenResponse), HttpStatusCode.OK);
 
             Func<Task> act = async () => { await client.ProcessResponseAsync(url, state); };
-            act.Should().Throw<InvalidOperationException>()
+            await act.Should().ThrowAsync<InvalidOperationException>()
                 .Where(e => e.Message.StartsWith("No IIdentityTokenValidator is configured"));
         }
 
