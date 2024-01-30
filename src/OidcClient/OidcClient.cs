@@ -1,4 +1,4 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace IdentityModel.OidcClient
     {
         private readonly ILogger _logger;
         private readonly AuthorizeClient _authorizeClient;
+        private readonly ParClient _parClient;
 
         private readonly bool _useDiscovery;
         private readonly ResponseProcessor _processor;
@@ -54,6 +56,7 @@ namespace IdentityModel.OidcClient
             Options = options;
             _logger = options.LoggerFactory.CreateLogger<OidcClient>();
             _authorizeClient = new AuthorizeClient(options);
+            _parClient = new ParClient(options);
             _processor = new ResponseProcessor(options, EnsureProviderInformationAsync);
         }
 
@@ -72,12 +75,45 @@ namespace IdentityModel.OidcClient
 
             await EnsureConfigurationAsync(cancellationToken);
 
-            var authorizeResult = await _authorizeClient.AuthorizeAsync(new AuthorizeRequest
+            AuthorizeResult authorizeResult;
+
+            if (Options.UsePar || Options.ProviderInformation.ParRequired)
             {
-                DisplayMode = request.BrowserDisplayMode,
-                Timeout = request.BrowserTimeout,
-                ExtraParameters = request.FrontChannelExtraParameters
-            }, cancellationToken);
+                var parResult = await _parClient.ParAuthorizeAsync(new AuthorizeRequest
+                {
+                    DisplayMode = request.BrowserDisplayMode,
+                    Timeout = request.BrowserTimeout,
+                    ExtraParameters = request.FrontChannelExtraParameters
+                }, cancellationToken);
+
+                if (parResult.IsError)
+                {
+                    return new LoginResult(parResult.Error, parResult.ErrorDescription);
+                }
+
+                authorizeResult = await _authorizeClient.AuthorizeAsync(new AuthorizeRequest
+                {
+                    DisplayMode = request.BrowserDisplayMode,
+                    Timeout = request.BrowserTimeout,
+                    ExtraParameters = new Parameters
+                    {
+                        new KeyValuePair<string, string>("request_uri", parResult.RequestUri),
+                        new KeyValuePair<string, string>("client_id", Options.ClientId),
+                    }
+                }, cancellationToken);
+
+                authorizeResult.State.State = parResult.State.State;
+                authorizeResult.State.CodeVerifier = parResult.State.CodeVerifier;
+            }
+            else
+            {
+                authorizeResult = await _authorizeClient.AuthorizeAsync(new AuthorizeRequest
+                {
+                    DisplayMode = request.BrowserDisplayMode,
+                    Timeout = request.BrowserTimeout,
+                    ExtraParameters = request.FrontChannelExtraParameters
+                }, cancellationToken);
+            }
 
             if (authorizeResult.IsError)
             {
@@ -428,6 +464,8 @@ namespace IdentityModel.OidcClient
                     KeySet = disco.KeySet,
 
                     AuthorizeEndpoint = disco.AuthorizeEndpoint,
+                    ParEndpoint = disco.TryGetString("pushed_authorization_request_endpoint"),
+                    ParRequired = disco.TryGetBoolean("require_pushed_authorization_requests") ?? false,
                     TokenEndpoint = disco.TokenEndpoint,
                     EndSessionEndpoint = disco.EndSessionEndpoint,
                     UserInfoEndpoint = disco.UserInfoEndpoint,
@@ -464,6 +502,17 @@ namespace IdentityModel.OidcClient
                 if (Options.Policy.Discovery.RequireKeySet)
                 {
                     var error = "Key set is missing in provider information";
+
+                    _logger.LogError(error);
+                    throw new InvalidOperationException(error);
+                }
+            }
+            
+            if (Options.UsePar)
+            {
+                if (Options.ProviderInformation.ParEndpoint.IsMissing())
+                {
+                    var error = "Par endpoint is missing in provider information";
 
                     _logger.LogError(error);
                     throw new InvalidOperationException(error);

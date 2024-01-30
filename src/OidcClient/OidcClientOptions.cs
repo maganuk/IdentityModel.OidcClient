@@ -18,6 +18,14 @@ namespace IdentityModel.OidcClient
     public class OidcClientOptions
     {
         /// <summary>
+        /// Gets or sets a value indicating if pushed authorization requests will be used.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if pushed authorization requests will be used; otherwise, <c>false</c>.
+        /// </value>
+        public bool UsePar { get; set; }
+
+        /// <summary>
         /// Gets or sets the authority.
         /// </summary>
         /// <value>

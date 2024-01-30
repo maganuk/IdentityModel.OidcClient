@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using IdentityModel.Jwk;
+using IdentityModel.OidcClient.Infrastructure;
 
 namespace IdentityModel.OidcClient
 {
@@ -45,6 +46,14 @@ namespace IdentityModel.OidcClient
         public string AuthorizeEndpoint { get; set; }
 
         /// <summary>
+        /// Gets or sets the pushed authorization request endpoint.
+        /// </summary>
+        /// <value>
+        /// The pushed authorization request endpoint.
+        /// </value>
+        public string ParEndpoint { get; set; }
+
+        /// <summary>
         /// Gets or sets the end session endpoint.
         /// </summary>
         /// <value>
@@ -84,5 +93,13 @@ namespace IdentityModel.OidcClient
         ///   <c>true</c> if [supports end session]; otherwise, <c>false</c>.
         /// </value>
         public bool SupportsEndSession => EndSessionEndpoint.IsPresent();
+
+        /// <summary>
+        /// Gets a value indicating whether [par is required].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [par is required]; otherwise, <c>false</c>.
+        /// </value>
+        public bool ParRequired { get; set; }
     }
 }
